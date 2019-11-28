@@ -20,6 +20,7 @@
 
 // Windows Runtime Library. Needed for Microsoft::WRL::ComPtr<> template class.
 #include <wrl.h>
+#include "Application.h"
 using namespace Microsoft::WRL;
 
 // DirectX 12 specific headers.
@@ -32,5 +33,8 @@ using namespace Microsoft::WRL;
 int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow)
 {
 	SetThreadDpiAwarenessContext (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-	return 0;
+
+	Application app(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+	
+	return app.main();
 }

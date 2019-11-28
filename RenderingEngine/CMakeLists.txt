@@ -1,13 +1,14 @@
-cmake_minimum_required( VERSION 3.9.1 ) # Latest version of CMake when this file was created.
+cmake_minimum_required( VERSION 3.15.0 ) # Latest version of CMake when this file was created.
 
 set( HEADER_FILES
     include/Window.h
-	include/Win32Window.h
+	include/Application.h
 )
 
 set( SRC_FILES
     src/main.cpp
-	src/Win32Window.cpp
+	src/Window.cpp
+	src/Application.cpp
 )
 
 add_executable( RenderingEngine WIN32
