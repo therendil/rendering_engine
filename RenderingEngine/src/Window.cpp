@@ -1,7 +1,16 @@
 #include "Window.h"
 #include <cassert>
 #include <algorithm>
+#include "GraphicsAPI.h"
 
+Window::Window (HINSTANCE hInstance, const wchar_t* windowClassName, int width, int height) : _windowClassName (windowClassName), _width(width), _height(height)
+{
+	RegisterWindowClass (hInstance, windowClassName);
+	_hWnd = CreateWindow (windowClassName, hInstance, windowClassName, _width, _height);
+	_vSync = GraphicsAPI::CheckTearingSupport ();
+
+	::GetWindowRect (_hWnd, &_windowRect);
+}
 
 Window::~Window()
 {
@@ -23,7 +32,7 @@ void Window::resize(int w, int h)
 {
 }
 
-void Window::show()
+void Window::show() const
 {
 	::ShowWindow(_hWnd, SW_SHOW);
 }
@@ -92,13 +101,6 @@ LRESULT CALLBACK Window::WndProcImpl(HWND hwnd, UINT message, WPARAM wParam, LPA
 
 	return 0;
 }
-
-Window::Window(HINSTANCE hInstance, const wchar_t* windowClassName) : _windowClassName(windowClassName)
-{
-	RegisterWindowClass(hInstance, windowClassName);
-	_hWnd = CreateWindow(windowClassName, hInstance, windowClassName, 600, 800);
-}
-
 
 LRESULT CALLBACK Window::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
