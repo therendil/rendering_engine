@@ -1,5 +1,6 @@
 #include "Application.h"
-#include <shellapi.h> // For CommandLineToArgvW
+#include <tuple>
+
 
 Application::Application(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow) : _hInstance(hInstance)
 {

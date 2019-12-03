@@ -1,15 +1,18 @@
 #include "Window.h"
 #include <cassert>
 #include <algorithm>
-#include "GraphicsAPI.h"
+#include "Graphics/DX12/DX12RenderFactory.h"
+#include <chrono>
 
 Window::Window (HINSTANCE hInstance, const wchar_t* windowClassName, int width, int height) : _windowClassName (windowClassName), _width(width), _height(height)
 {
 	RegisterWindowClass (hInstance, windowClassName);
 	_hWnd = CreateWindow (windowClassName, hInstance, windowClassName, _width, _height);
-	_vSync = GraphicsAPI::CheckTearingSupport ();
+	_vSync = DX12RenderFactory::CheckTearingSupport ();
 
 	::GetWindowRect (_hWnd, &_windowRect);
+
+	_renderingCore = IRenderingCore::CreateRenderer (RHI_TYPE::DX12);
 }
 
 Window::~Window()
@@ -18,10 +21,28 @@ Window::~Window()
 
 void Window::update()
 {
-}
+	using clock = std::chrono::high_resolution_clock;
+	
+	static uint64_t frameCounter = 0;
+	static double elapsedSeconds = 0.0;
+	static auto t0 = clock::now ();
 
-void Window::render()
-{
+	frameCounter++;
+	const auto t1 = clock::now ();
+	const auto deltaTime = t1 - t0;
+	t0 = t1;
+
+	elapsedSeconds += deltaTime.count () * 1e-9;
+	if (elapsedSeconds > 1.0)
+	{
+		char buffer[500];
+		const auto fps = frameCounter / elapsedSeconds;
+		sprintf_s (buffer, 500, "FPS: %f\n", fps);
+		OutputDebugString (buffer);
+
+		frameCounter = 0;
+		elapsedSeconds = 0.0;
+	}
 }
 
 void Window::setFullscreen(bool on)
@@ -46,12 +67,12 @@ LRESULT CALLBACK Window::WndProcImpl(HWND hwnd, UINT message, WPARAM wParam, LPA
 		{
 		case WM_PAINT:
 			update();
-			render();
+			_renderingCore->render();
 			break;
 		case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
 		{
-			bool alt = (::GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+			const bool alt = (::GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
 
 			switch (wParam)
 			{
@@ -67,6 +88,8 @@ LRESULT CALLBACK Window::WndProcImpl(HWND hwnd, UINT message, WPARAM wParam, LPA
 			case VK_F11:
 				setFullscreen(!_fullscreen);
 				}
+				break;
+			default:
 				break;
 			}
 		}

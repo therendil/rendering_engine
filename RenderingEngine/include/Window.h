@@ -2,6 +2,7 @@
 #include "Window.h"
 #include <Windows.h>
 #include <cstdint>
+#include "Graphics/RenderingCore.h"
 
 
 // The min/max macros conflict with like-named member functions.
@@ -32,13 +33,14 @@ class Window
 	RECT _windowRect;
 	HWND _hWnd;
 	LRESULT CALLBACK WndProcImpl(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+	IRenderingCore* _renderingCore;
+	
 
 public:
 	Window(HINSTANCE hInstance, const wchar_t* windowClassName, int width, int height);
 	~Window();
 	
 	void update();
-	void render();
 	void setFullscreen(bool on);
 	void resize(int w, int h);
 	void show () const;

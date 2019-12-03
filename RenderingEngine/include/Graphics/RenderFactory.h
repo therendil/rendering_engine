@@ -2,5 +2,6 @@
 
 class IRenderFactory
 {
+public:
 	virtual ~IRenderFactory () = default;
 };

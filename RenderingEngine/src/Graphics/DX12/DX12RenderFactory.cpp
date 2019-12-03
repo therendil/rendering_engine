@@ -1,12 +1,7 @@
 #include "Graphics/DX12/DX12RenderFactory.h"
 #include <d3d12.h>
+#include <d3dx12.h>
 using namespace Microsoft::WRL;
-
-DX12RenderFactory::~DX12RenderFactory()
-{
-}
-
-
 
 bool DX12RenderFactory::CheckTearingSupport ()
 {
@@ -69,7 +64,7 @@ ComPtr<IDXGIAdapter4> DX12RenderFactory::GetAdapter (bool useWarp)
 	return adapter4;
 }
 
-ComPtr<ID3D12Device2> DX12RenderFactory::CreateDevice(Microsoft::WRL::ComPtr<IDXGIAdapter4> adapter)
+ComPtr<ID3D12Device2> DX12RenderFactory::CreateDevice(ComPtr<IDXGIAdapter4> adapter)
 {
 	ComPtr<ID3D12Device6> d3d12Device;
 	ThrowIfFailed (D3D12CreateDevice (adapter.Get (), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS (&d3d12Device)));
@@ -102,4 +97,87 @@ ComPtr<ID3D12Device2> DX12RenderFactory::CreateDevice(Microsoft::WRL::ComPtr<IDX
 #endif
 
 	return d3d12Device;
+}
+
+WRL::ComPtr<ID3D12CommandQueue> DX12RenderFactory::CreateCommandQueue(ComPtr<ID3D12Device2> device, D3D12_COMMAND_LIST_TYPE type)
+{
+	ComPtr<ID3D12CommandQueue> commandQueue;
+
+	D3D12_COMMAND_QUEUE_DESC desc{};
+	desc.Type = type;
+	desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+	desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	desc.NodeMask = 0;
+
+	ThrowIfFailed (device->CreateCommandQueue (&desc, IID_PPV_ARGS (&commandQueue)));
+
+	return commandQueue;
+}
+
+WRL::ComPtr<IDXGISwapChain4> DX12RenderFactory::CreateSwapChain(HWND hWnd, WRL::ComPtr<ID3D12CommandQueue> commandQueue,
+	uint32_t width, uint32_t height, uint32_t bufferCount)
+{
+	ComPtr<IDXGISwapChain4> swapChain;
+	ComPtr<IDXGIFactory4> factory;
+	UINT createFactoryFlags = 0;
+#ifdef _DEBUG
+	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+#endif
+
+	ThrowIfFailed (CreateDXGIFactory2 (createFactoryFlags, IID_PPV_ARGS (&factory)));
+
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
+	swapChainDesc.Width = width;
+	swapChainDesc.Height = height;
+	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapChainDesc.Stereo = FALSE;
+	swapChainDesc.SampleDesc = { 1, 0 };
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferCount = bufferCount;
+	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+	swapChainDesc.Flags = CheckTearingSupport () ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+
+	ComPtr<IDXGISwapChain1> swapChain1;
+	ThrowIfFailed (factory->CreateSwapChainForHwnd(commandQueue.Get(), hWnd, &swapChainDesc, nullptr, nullptr, &swapChain1));
+
+	ThrowIfFailed (factory->MakeWindowAssociation (hWnd, DXGI_MWA_NO_ALT_ENTER));
+
+	ThrowIfFailed (swapChain1.As(&swapChain));
+
+	return swapChain;
+}
+
+WRL::ComPtr<ID3D12DescriptorHeap> DX12RenderFactory::CreateDescriptorHeap(WRL::ComPtr<ID3D12Device2> device,
+	D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors)
+{
+	ComPtr<ID3D12DescriptorHeap> descriptorHeap;
+	D3D12_DESCRIPTOR_HEAP_DESC desc{};
+	desc.NumDescriptors = numDescriptors;
+	desc.Type = type;
+
+	ThrowIfFailed (device->CreateDescriptorHeap (&desc, IID_PPV_ARGS (&descriptorHeap)));
+
+	return descriptorHeap;
+}
+
+void DX12RenderFactory::UpdateRenderTargetViews(ComPtr<ID3D12Device2> device,
+	ComPtr<IDXGISwapChain4> swapChain, ComPtr<ID3D12DescriptorHeap> descriptorHeap)
+{
+	auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle (descriptorHeap->GetCPUDescriptorHandleForHeapStart ());
+
+	for (int i = 0; i < g_NumFrames; ++i)
+	{
+		ComPtr<ID3D12Resource> backBuffer;
+		ThrowIfFailed (swapChain->GetBuffer (i, IID_PPV_ARGS (&backBuffer)));
+
+		device->CreateRenderTargetView (backBuffer.Get (), nullptr, rtvHandle);
+
+		g_BackBuffers[i] = backBuffer;
+
+		rtvHandle.Offset (rtvDescriptorSize);
+	}
 }
