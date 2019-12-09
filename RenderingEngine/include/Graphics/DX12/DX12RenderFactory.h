@@ -28,5 +28,6 @@ public:
 	static WRL::ComPtr<ID3D12CommandQueue> CreateCommandQueue (WRL::ComPtr<ID3D12Device2> device, D3D12_COMMAND_LIST_TYPE type);
 	static WRL::ComPtr<IDXGISwapChain4> CreateSwapChain (HWND hWnd, WRL::ComPtr<ID3D12CommandQueue> commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
 	static WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap (WRL::ComPtr<ID3D12Device2> device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
+	static void UpdateRenderTargetViews (WRL::ComPtr<ID3D12Device2> device, WRL::ComPtr<IDXGISwapChain4> swapChain, WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap);
 	
 };

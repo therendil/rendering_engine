@@ -167,9 +167,9 @@ void DX12RenderFactory::UpdateRenderTargetViews(ComPtr<ID3D12Device2> device,
 {
 	auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle (descriptorHeap->GetCPUDescriptorHandleForHeapStart ());
+	/*CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle (descriptorHeap->GetCPUDescriptorHandleForHeapStart ());
 
-	for (int i = 0; i < g_NumFrames; ++i)
+	for (int i = 0; i < numFrames; ++i)
 	{
 		ComPtr<ID3D12Resource> backBuffer;
 		ThrowIfFailed (swapChain->GetBuffer (i, IID_PPV_ARGS (&backBuffer)));
@@ -179,5 +179,5 @@ void DX12RenderFactory::UpdateRenderTargetViews(ComPtr<ID3D12Device2> device,
 		g_BackBuffers[i] = backBuffer;
 
 		rtvHandle.Offset (rtvDescriptorSize);
-	}
+	}*/
 }

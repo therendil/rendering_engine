@@ -8,6 +8,8 @@ DX12RenderingCore::DX12RenderingCore()
 	_commandQueue = DX12RenderFactory::CreateCommandQueue (_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 	_swapChain = DX12RenderFactory::CreateSwapChain (nullptr, _commandQueue, width, height, numFrames);
 	_currentBackBufferIndex = _swapChain->GetCurrentBackBufferIndex ();
+	_descriptorHeap = DX12RenderFactory::CreateDescriptorHeap (_device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, numFrames);
+	_descriptorSize = _device->GetDescriptorHandleIncrementSize (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 }
 
 void DX12RenderingCore::render()

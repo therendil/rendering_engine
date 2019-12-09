@@ -1,3 +1,5 @@
+#include <Windows.h>
+#include <WinBase.h>
 #include "Application.h"
 
 int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow)
